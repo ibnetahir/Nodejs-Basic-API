@@ -9,7 +9,7 @@ const fetchuser = require("../middleware/fetchuser");
 const JWT_SECRET = 'Let$sgo';
 // ROUTE 1; Create a User using: POST "/api/auth/createuser"
 router.post(
-  "/createuser",
+  "/users",
   [
     body("email").isEmail(),
     body("name").isLength({ min: 4 }),
@@ -100,13 +100,13 @@ router.post(
     }
 );
 
-// ROUTE 3;  Get logged in user details using: POST "/api/auth/getuser". Login required
+// ROUTE 3;  Get logged in user details using: GET "/api/auth/getuser". Login required
 
-router.post('/getuser', fetchuser , async (req, res)=>{
+router.get('/user', fetchuser , async (req, res)=>{
     try {
         let userId = req.user.id;
         const user = await User.findById(userId).select("-password")
-        res.send(user)
+        res.send(user).status(200)
         
     } catch (error) {
         console.error(error.message);
@@ -114,8 +114,8 @@ router.post('/getuser', fetchuser , async (req, res)=>{
     }
 })
 
-// ROUTE 4; Get logged in user's Balance using: POST "/api/auth/getuserbalance". Login required
-router.post('/getuserbalance', fetchuser , async (req, res)=>{
+// ROUTE 4; Get logged in user's Balance using: GET "/api/auth/user/balance". Login required
+router.get('/user/balance', fetchuser , async (req, res)=>{
   try {
       let userId = req.user.id;
       const user = await User.findById(userId).select(["-password", "-email", "-name", "-_id", "-__v", "-date"])
@@ -128,8 +128,8 @@ router.post('/getuserbalance', fetchuser , async (req, res)=>{
 
 });
 
-// ROUTE 5; Get logged in user's id using: POST "/api/auth/getuserid". Login required
-router.post("/getuserid", fetchuser, (req, res)=>{
+// ROUTE 5; Get logged in user's id using: GET "/api/auth/user/id". Login required
+router.get("/user/id", fetchuser, (req, res)=>{
   try {
     let userId = req.user.id
     res.send({userId})
@@ -139,15 +139,15 @@ router.post("/getuserid", fetchuser, (req, res)=>{
   }
 })
 
-// ROUTE 6; Update logged in user's Balance using: PUT "/api/auth/updatebalance". Login required 
-router.put("/updatebalance/:id", fetchuser, async (req, res)=>{
+// ROUTE 6; Update logged in user's Balance using: PUT "/api/auth/user/balance". Login required 
+router.put("/user/balance", fetchuser, async (req, res)=>{
   try {
     if (req.body.newBalance >= 0) {
       let {newBalance} = req.body;
       let userId = req.user.id;
       
       let user = await User.findById(userId).select(["-password", "-email", "-name", "-balance", "-__v", "-date"]);
-      user = await User.findByIdAndUpdate(userId, {$set:{balance:newBalance + 50}}, {new: true});
+      user = await User.findByIdAndUpdate(userId, {$set:{balance:Number(newBalance)}}, {new: true});
       let balance = user.balance
       res.status(200).send({balance});
     } else {
