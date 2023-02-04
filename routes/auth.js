@@ -7,7 +7,7 @@ let jwt = require('jsonwebtoken');
 const fetchuser = require("../middleware/fetchuser");
 
 const JWT_SECRET = 'Let$sgo';
-// ROUTE 1; Create a User using: POST "/api/auth/createuser"
+// ROUTE 1; Create a User using: POST "/api/users"
 router.post(
   "/users",
   [
@@ -56,7 +56,7 @@ router.post(
   }
 );
 
-// ROUTE2; Authenticate a User using: POST "/api/auth/login"
+// ROUTE2; Authenticate a User using: POST "/api/login"
 
 router.post(
     "/login",
@@ -100,7 +100,7 @@ router.post(
     }
 );
 
-// ROUTE 3;  Get logged in user details using: GET "/api/auth/getuser". Login required
+// ROUTE 3;  Get logged in user details using: GET "/api/user". Login required
 
 router.get('/user', fetchuser , async (req, res)=>{
     try {
@@ -114,11 +114,12 @@ router.get('/user', fetchuser , async (req, res)=>{
     }
 })
 
-// ROUTE 4; Get logged in user's Balance using: GET "/api/auth/user/balance". Login required
+// ROUTE 4; Get logged in user's Balance using: GET "/api/user/balance". Login required
 router.get('/user/balance', fetchuser , async (req, res)=>{
   try {
+      console.log( "user object",req.user);
       let userId = req.user.id;
-      const user = await User.findById(userId).select(["-password", "-email", "-name", "-_id", "-__v", "-date"])
+      const user = await User.findById(userId);
       res.send(String(user.balance));
       
   } catch (error) {
@@ -128,7 +129,7 @@ router.get('/user/balance', fetchuser , async (req, res)=>{
 
 });
 
-// ROUTE 5; Get logged in user's id using: GET "/api/auth/user/id". Login required
+// ROUTE 5; Get logged in user's id using: GET "/api/user/id". Login required
 router.get("/user/id", fetchuser, (req, res)=>{
   try {
     let userId = req.user.id
@@ -139,9 +140,10 @@ router.get("/user/id", fetchuser, (req, res)=>{
   }
 })
 
-// ROUTE 6; Update logged in user's Balance using: PUT "/api/auth/user/balance". Login required 
+// ROUTE 6; Update logged in user's Balance using: PUT "/api/user/balance". Login required 
 router.put("/user/balance", fetchuser, async (req, res)=>{
   try {
+    console.log("balance" , req.body.newBalance)
     if (req.body.newBalance >= 0) {
       let {newBalance} = req.body;
       let userId = req.user.id;
