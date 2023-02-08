@@ -4,7 +4,8 @@ const { body, validationResult } = require("express-validator");
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 let jwt = require('jsonwebtoken');
-const fetchuser = require("../middleware/fetchuser");
+const validateUser = require("../middleware/fetchuser");
+
 
 const JWT_SECRET = 'Let$sgo';
 // ROUTE 1; Create a User using: POST "/api/users"
@@ -57,7 +58,6 @@ router.post(
 );
 
 // ROUTE2; Authenticate a User using: POST "/api/login"
-
 router.post(
     "/login",
     [
@@ -101,8 +101,7 @@ router.post(
 );
 
 // ROUTE 3;  Get logged in user details using: GET "/api/user". Login required
-
-router.get('/user', fetchuser , async (req, res)=>{
+router.get('/user', validateUser , async (req, res)=>{
     try {
         let userId = req.user.id;
         const user = await User.findById(userId).select("-password")
@@ -115,7 +114,7 @@ router.get('/user', fetchuser , async (req, res)=>{
 })
 
 // ROUTE 4; Get logged in user's Balance using: GET "/api/user/balance". Login required
-router.get('/user/balance', fetchuser , async (req, res)=>{
+router.get('/user/balance', validateUser , async (req, res)=>{
   try {
       console.log( "user object",req.user);
       let userId = req.user.id;
@@ -130,7 +129,7 @@ router.get('/user/balance', fetchuser , async (req, res)=>{
 });
 
 // ROUTE 5; Get logged in user's id using: GET "/api/user/id". Login required
-router.get("/user/id", fetchuser, (req, res)=>{
+router.get("/user/id", validateUser, (req, res)=>{
   try {
     let userId = req.user.id
     res.send({userId})
@@ -141,7 +140,7 @@ router.get("/user/id", fetchuser, (req, res)=>{
 })
 
 // ROUTE 6; Update logged in user's Balance using: PUT "/api/user/balance". Login required 
-router.put("/user/balance", fetchuser, async (req, res)=>{
+router.put("/user/balance", validateUser, async (req, res)=>{
   try {
     console.log("balance" , req.body.newBalance)
     if (req.body.newBalance >= 0) {

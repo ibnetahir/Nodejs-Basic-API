@@ -1,11 +1,11 @@
 const express = require("express");
-const fetchuser = require("../middleware/fetchuser");
+const validateUser = require("../middleware/fetchuser");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const Notes = require("../models/Notes");
 
 //ROUTE 1; Get all the notes using: GET "/api/notes/fetchallnotes"
-router.get("/notes", fetchuser, async (req, res) => {
+router.get("/notes", validateUser, async (req, res) => {
   try {
     const notes = await Notes.find({ user: req.user.id });
     res.json(notes);
@@ -18,7 +18,7 @@ router.get("/notes", fetchuser, async (req, res) => {
 //ROUTE 2; Add a new note using: POST "/api/notes/addnote"
 router.post(
   "/notes",
-  fetchuser,
+  validateUser,
   [
     body("title", "Enter a valid title").isLength({ min: 3 }),
     body("description", "must be atleast 5 characters").isLength({ min: 5 }),
@@ -43,7 +43,7 @@ router.post(
 );
 
 //ROUTE 3; Update an existing note using: PUT "/api/notes/updatenote"
-router.put("/notes/:id", fetchuser, async (req, res) => {
+router.put("/notes/:id", validateUser, async (req, res) => {
   const { title, description, tag } = req.body;
   try {
     // Create a newNote object
@@ -81,7 +81,7 @@ router.put("/notes/:id", fetchuser, async (req, res) => {
 });
 
 //ROUTE 4; Delete an existing note using: DELETE "/api/notes/deletenote"
-router.delete("/notes/:id", fetchuser, async (req, res) => {
+router.delete("/notes/:id", validateUser, async (req, res) => {
   const { title, description, tag } = req.body;
 
   try {
