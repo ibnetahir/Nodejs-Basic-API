@@ -1,5 +1,6 @@
 const express = require("express");
 const validateUser = require("../middleware/fetchuser");
+const logger = require('../utils/winston.service');
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const Notes = require("../models/Notes");
@@ -10,7 +11,7 @@ router.get("/notes", validateUser, async (req, res) => {
     const notes = await Notes.find({ user: req.user.id });
     res.json(notes);
   } catch (error) {
-    console.error(error.message);
+    logger.error(error.message);
     res.status(500).send("Intenel server error");
   }
 });
@@ -36,7 +37,7 @@ router.post(
       const savednote = await note.save();
       res.json(savednote);
     } catch (error) {
-      console.error(error.message);
+      logger.error(error.message);
       res.status(500).send("Intenel server error");
     }
   }
@@ -75,7 +76,7 @@ router.put("/notes/:id", validateUser, async (req, res) => {
     );
     res.json({ note });
   } catch (error) {
-    console.error(error.message);
+    logger.error(error.message);
     res.status(500).send("Intenel server error");
   }
 });
@@ -99,7 +100,7 @@ router.delete("/notes/:id", validateUser, async (req, res) => {
     note = await Notes.findByIdAndDelete(req.params.id);
     res.json({ Success: "Note has been deleted", note: note });
   } catch (error) {
-    console.error(error.message);
+    logger.error(error.message);
     res.status(500).send("Intenel server error");
   }
 });

@@ -1,5 +1,6 @@
 const express = require("express");
 const User = require("../models/User");
+const logger = require('../utils/winston.service');
 const { body, validationResult } = require("express-validator");
 const router = express.Router();
 let jwt = require('jsonwebtoken');
@@ -50,7 +51,7 @@ router.post(
       success = true
       res.json({success, authToken});
     } catch (error) {
-      console.error(error.message);
+      logger.error(error.message);
       res.status(500).send("some error occured");
     }
     // res.send(req.body);
@@ -94,7 +95,7 @@ router.post(
             success = true
             res.json({success,authToken});
         } catch (error) {
-            console.error(error.message);
+            logger.error(error.message);
             res.status(500).send("Intenel server error");
           }
     }
@@ -104,11 +105,14 @@ router.post(
 router.get('/user', validateUser , async (req, res)=>{
     try {
         let userId = req.user.id;
-        const user = await User.findById(userId).select("-password")
+        const user = await User.findById(userId).select("-password");
+        if (!user) {
+          res.status(404).send("user does not exist!")
+        }
         res.send(user).status(200)
         
     } catch (error) {
-        console.error(error.message);
+        logger.error(error.message);
         res.status(500).send("Intenel server error");
     }
 })
@@ -116,13 +120,15 @@ router.get('/user', validateUser , async (req, res)=>{
 // ROUTE 4; Get logged in user's Balance using: GET "/api/user/balance". Login required
 router.get('/user/balance', validateUser , async (req, res)=>{
   try {
-      console.log( "user object",req.user);
       let userId = req.user.id;
       const user = await User.findById(userId);
+      if (!user) {
+        res.status(404).send("user does not exist!");
+      }
       res.send(String(user.balance));
       
   } catch (error) {
-      console.error(error.message);
+      logger.error(error.message);
       res.status(500).send("Intenel server error");
   }
 
@@ -134,7 +140,7 @@ router.get("/user/id", validateUser, (req, res)=>{
     let userId = req.user.id
     res.send({userId})
   } catch (error) {
-    console.error(error.message);
+    logger.error(error.message);
     res.status(500).send("Intenel server error");
   }
 })
@@ -142,20 +148,23 @@ router.get("/user/id", validateUser, (req, res)=>{
 // ROUTE 6; Update logged in user's Balance using: PUT "/api/user/balance". Login required 
 router.put("/user/balance", validateUser, async (req, res)=>{
   try {
-    console.log("balance" , req.body.newBalance)
     if (req.body.newBalance >= 0) {
       let {newBalance} = req.body;
       let userId = req.user.id;
-      
       let user = await User.findById(userId).select(["-password", "-email", "-name", "-balance", "-__v", "-date"]);
-      user = await User.findByIdAndUpdate(userId, {$set:{balance:Number(newBalance)}}, {new: true});
-      let balance = user.balance
-      res.status(200).send({balance});
+
+      if (user) {
+        user = await User.findByIdAndUpdate(userId, {$set:{balance:Number(newBalance)}}, {new: true});
+        let balance = user.balance
+        res.status(200).send({balance});
+      } else{
+        res.status(404).send("user does not exist")
+      }
     } else {
       res.status(400).send("Balance cannot be negative!")
     }
   } catch (error) {
-    console.error(error.message);
+    logger.error(error.message);
     res.status(500).send("Intenel server error");
   }
 });
