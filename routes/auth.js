@@ -2,9 +2,9 @@ const express = require("express");
 const User = require("../models/User");
 const { body, validationResult } = require("express-validator");
 const router = express.Router();
-const bcrypt = require('bcryptjs');
 let jwt = require('jsonwebtoken');
 const validateUser = require("../middleware/fetchuser");
+const { hash, compare, genSalt } = require('../utils/bcrypt.service');
 
 
 const JWT_SECRET = 'Let$sgo';
@@ -32,8 +32,8 @@ router.post(
           .json({success, error: "sorry user with the same email already exits" });
       }
       // Create a new user
-      const salt = await bcrypt.genSalt(10);
-      const  secPass = await bcrypt.hash(req.body.password, salt)
+      const salt = await genSalt(10);
+      const  secPass = await hash(req.body.password, salt)
       user = await User.create({
         name: req.body.name,
         email: req.body.email,
@@ -79,7 +79,7 @@ router.post(
                 return res.status(400).json({error: "Please try to login with valid credentials"})
             }
 
-            const passwordCompare = await bcrypt.compare(password, user.password);
+            const passwordCompare = await compare(password, user.password);
             if (!passwordCompare) {
                 success = false
                 return res.status(400).json({success, error: "Please try to login with valid credentials"})
