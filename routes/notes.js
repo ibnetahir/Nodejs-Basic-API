@@ -4,6 +4,30 @@ const logger = require('../utils/winston.service');
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const Notes = require("../models/Notes");
+const validate = require("../ajvShema/noteschema");
+
+const valid = (req, res, next) => {
+  let result = validate(req.body);
+
+  if(result){
+    next();
+  } else {
+    let response = {};
+    let errors = validate.errors.map(error =>{
+      return {
+        keyword: error.keyword,
+        message: error.message
+      }
+    });
+
+    response = {
+      statusCode: 400,
+      errors: errors
+    }
+
+    res.status(400).send(response);
+  }
+}
 
 //ROUTE 1; Get all the notes using: GET "/api/notes/fetchallnotes"
 router.get("/notes", validateUser, async (req, res) => {
@@ -20,10 +44,7 @@ router.get("/notes", validateUser, async (req, res) => {
 router.post(
   "/notes",
   validateUser,
-  [
-    body("title", "Enter a valid title").isLength({ min: 3 }),
-    body("description", "must be atleast 5 characters").isLength({ min: 5 }),
-  ],
+  valid,
   async (req, res) => {
     try {
       const { title, description, tag } = req.body;

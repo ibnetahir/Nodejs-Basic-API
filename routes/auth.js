@@ -6,17 +6,35 @@ const router = express.Router();
 let jwt = require('jsonwebtoken');
 const validateUser = require("../middleware/fetchuser");
 const { hash, compare, genSalt } = require('../utils/bcrypt.service');
+const validate = require("../ajvShema/usershema");
 
+const valid = (req,res, next)=> {
+  let result =  validate(req.body);
+  if (result) {
+    next();
+  } else {
+    let response = {};
+    let errors = validate.errors.map(error => {
+      return {
+        keyword: error.keyword,
+        message: error.message
+      }
+    });
+
+    response = {
+      statusCode: 400,
+      errors: errors
+    };
+
+    res.status(400).send(response);
+  }
+  
+}
 
 const JWT_SECRET = 'Let$sgo';
 // ROUTE 1; Create a User using: POST "/api/users"
 router.post(
-  "/users",
-  [
-    body("email").isEmail(),
-    body("name").isLength({ min: 4 }),
-    body("password").isLength({ min: 8 }),
-  ],
+  "/users", valid,
   async (req, res) => {
     let success = false
     // if there are errors then return bad request and errors
@@ -25,7 +43,7 @@ router.post(
       return res.status(400).json({success, errors: errors.array() });
     }
     try {
-      // check wheter user exits with the same email.  
+      // check wether user exits with the same email.  
       let user = await User.findOne({ email: req.body.email });
       if (user) {
         return res
